@@ -74,7 +74,7 @@ def build():
         title=dict(
             text="<b>The Shore Bottleneck: Summer Traffic Change by Station</b><br>"
                  "<sup>17 curated TMAS monitoring stations · summer vs winter Average Daily Traffic</sup>",
-            x=0.01, xanchor="left",
+            x=0.5, xanchor="center",
         ),
         xaxis=dict(
             title="Monitoring Station",
