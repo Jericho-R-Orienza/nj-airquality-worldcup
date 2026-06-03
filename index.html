@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Cup Transit Corridor Air Quality Analysis: NJ DEP Project</title>
+  <meta name="description" content="GIS and data analysis project examining air quality and environmental justice impacts of the 2026 FIFA World Cup on NJ Transit corridor communities.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --color-bg:          #ffffff;
+      --color-bg-alt:      #f4f5f7;
+      --color-bg-callout:  #eef2f7;
+      --color-text:        #1c1c1e;
+      --color-text-muted:  #555e6e;
+      --color-heading:     #1a2b4a;
+      --color-accent:      #1a5276;
+      --color-border:      #d0d5dd;
+      --color-border-strong: #1a2b4a;
+      --color-label:       #1a5276;
+      --color-corridor:    #e31a1c;
+      --color-shore:       #1f78b4;
+      --color-newark:      #ff7f00;
+      --color-statewide:   #6a3d9a;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--color-text);
+      background: var(--color-bg);
+      border-top: 4px solid var(--color-heading);
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    section {
+      padding: 64px 0;
+    }
+
+    section + section {
+      border-top: 2px solid var(--color-border);
+    }
+
+    .bg-alt { background: var(--color-bg-alt); }
+
+    /* ── Typography ── */
+    h1, h2 {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      color: var(--color-heading);
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 1.1rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 1.15;
+      margin-bottom: 1.4rem;
+    }
+
+    h3 {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-heading);
+    }
+
+    p { margin-bottom: 1.25rem; }
+    p:last-child { margin-bottom: 0; }
+
+    .mono {
+      font-family: 'Courier New', monospace;
+      font-size: 0.93em;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-label);
+      margin-bottom: 10px;
+    }
+
+    /* ── Hero ── */
+    #hero {
+      background: var(--color-bg-alt);
+      padding: 72px 0 64px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-label);
+      margin-bottom: 20px;
+    }
+
+    .hero-thesis {
+      font-size: 1.05rem;
+      color: var(--color-text-muted);
+      max-width: 680px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    /* ── Stat cards ── */
+    .stat-cards {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .stat-card {
+      flex: 1 1 180px;
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-top: 3px solid var(--color-accent);
+      padding: 20px 22px;
+    }
+
+    .stat-number {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--color-heading);
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .hero-attribution {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin: 0;
+    }
+
+    /* ── Section intro text ── */
+    .section-intro {
+      max-width: 680px;
+      margin-bottom: 40px;
+    }
+
+    .section-intro p {
+      color: var(--color-text);
+      line-height: 1.75;
+    }
+
+    /* ── Chart wrapper ── */
+    .chart-wrap {
+      margin: 32px 0;
+    }
+
+    .chart-caption {
+      font-size: 13px;
+      font-style: italic;
+      color: var(--color-text-muted);
+      margin-bottom: 10px;
+      line-height: 1.5;
+      max-width: 720px;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--color-border);
+      background: #fff;
+    }
+
+    /* ── Bridge paragraphs ── */
+    .bridge {
+      max-width: 720px;
+      margin: 28px 0;
+      line-height: 1.8;
+      color: var(--color-text);
+    }
+
+    .bridge:last-child { margin-bottom: 0; }
+
+    /* ── Callout boxes ── */
+    .callout {
+      background: var(--color-bg-callout);
+      border-left: 4px solid var(--color-accent);
+      padding: 24px 28px;
+      margin: 36px 0;
+    }
+
+    .callout.ej {
+      border-left-color: var(--color-corridor);
+    }
+
+    .callout-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-label);
+      margin-bottom: 12px;
+    }
+
+    .callout.ej .callout-label {
+      color: var(--color-corridor);
+    }
+
+    .callout p {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    /* ── Map legend ── */
+    .map-legend {
+      display: flex;
+      gap: 28px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ── Finding summary cards ── */
+    .finding-cards {
+      display: flex;
+      gap: 20px;
+      margin-top: 32px;
+    }
+
+    .finding-card {
+      flex: 1;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-top: 3px solid var(--color-accent);
+      padding: 24px;
+    }
+
+    .finding-headline {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-heading);
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+
+    .finding-card p {
+      font-size: 13.5px;
+      color: var(--color-text-muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    /* ── Risk case text ── */
+    .risk-text {
+      max-width: 720px;
+      line-height: 1.8;
+      color: var(--color-text);
+      margin-bottom: 1.4rem;
+    }
+
+    .risk-text:last-of-type { margin-bottom: 0; }
+
+    /* ── Policy recommendations ── */
+    .rec-list {
+      margin-top: 32px;
+    }
+
+    .rec-item {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .rec-item:first-child {
+      border-top: 1px solid var(--color-border);
+    }
+
+    .rec-header {
+      display: flex;
+      gap: 20px;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .rec-num {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-label);
+      flex-shrink: 0;
+      min-width: 24px;
+    }
+
+    .rec-body {
+      padding-left: 44px;
+      font-size: 15px;
+      color: var(--color-text);
+      line-height: 1.75;
+      max-width: 680px;
+    }
+
+    /* ── Footer ── */
+    #footer {
+      background: var(--color-heading);
+      border-top: 2px solid #2c5282;
+    }
+
+    .footer-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 56px 48px 48px;
+      display: grid;
+      grid-template-columns: 2fr 2fr 1fr;
+      gap: 40px;
+    }
+
+    .footer-col h4 {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #c8d4e0;
+      margin-bottom: 14px;
+    }
+
+    .footer-col p,
+    .footer-col li {
+      font-size: 13px;
+      color: #7a97af;
+      line-height: 1.8;
+      list-style: none;
+      margin: 0;
+    }
+
+    .footer-col ul { padding: 0; }
+
+    .footer-col p + p { margin-top: 4px; }
+
+    .footer-col a {
+      color: #7a97af;
+      text-decoration: none;
+    }
+
+    .footer-col a:hover { color: #c8d4e0; }
+
+    .footer-bottom {
+      border-top: 1px solid #2c5282;
+      text-align: center;
+      font-size: 11px;
+      color: #4a6a82;
+      padding: 20px 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── Print ── */
+    @media print {
+      #map iframe { display: none; }
+      body { font-size: 14px; color: #000; border-top: none; }
+      h1, h2, h3 { color: #000; }
+      .callout { border-left-width: 3px; }
+      #footer { display: none; }
+    }
+
+    /* ── Responsive: tablet ── */
+    @media (max-width: 900px) {
+      .container { padding: 0 32px; }
+      .footer-inner { padding: 48px 32px 40px; grid-template-columns: 1fr 1fr; }
+      .footer-bottom { padding: 18px 32px; }
+    }
+
+    /* ── Responsive: mobile ── */
+    @media (max-width: 768px) {
+      .container { padding: 0 24px; }
+
+      section { padding: 48px 0; }
+
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.6rem; }
+
+      .stat-cards { gap: 12px; }
+      .stat-card  { flex: 1 1 calc(50% - 6px); }
+
+      .finding-cards { flex-direction: column; }
+
+      #map iframe { height: 480px !important; }
+
+      .footer-inner {
+        grid-template-columns: 1fr;
+        padding: 40px 24px 32px;
+        gap: 28px;
+      }
+
+      .footer-bottom { padding: 16px 24px; }
+
+      .rec-body { padding-left: 0; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.75rem; }
+      .stat-card { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 1: HERO
+     ══════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="container">
+    <p class="hero-eyebrow">NJ DEP Job Fair Project &nbsp;·&nbsp; GIS + Data Analysis</p>
+    <h1>World Cup Transit Corridor<br>Air Quality &amp; Environmental Justice Analysis</h1>
+    <p class="hero-thesis">Eight games. Five weeks. Peak ozone season. This analysis maps where the environmental cost of hosting the 2026 FIFA World Cup lands, and who bears it.</p>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-number">82,500</div>
+        <p class="stat-label">Fans per match at MetLife Stadium</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">40,000</div>
+        <p class="stat-label">NJ Transit rail tickets per matchday</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">+82%</div>
+        <p class="stat-label">Summer ozone above winter baseline (transit corridor)</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">0</div>
+        <p class="stat-label">Federal air quality monitors in Essex County, 2023–2025</p>
+      </div>
+    </div>
+
+    <p class="hero-attribution">Data: EPA AQS &nbsp;·&nbsp; FHWA TMAS &nbsp;·&nbsp; NJ Transit &nbsp;·&nbsp; NJDEP Open Data &nbsp;·&nbsp; US Census Bureau</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 2 — INTERACTIVE MAP
+     ══════════════════════════════════════════════════════ -->
+<section id="map">
+  <div class="container">
+    <div class="section-label">Interactive Map</div>
+    <h2>Where the Risk Concentrates</h2>
+
+    <div class="section-intro">
+      <p>The map below plots EPA air quality monitoring stations and FHWA traffic monitoring stations across New Jersey, with World Cup event locations overlaid. Air quality station markers are colored by AQI level. Traffic station circles are sized by average daily vehicle count. Use the layer toggles in the map to switch between pollutants, seasons, and months.</p>
+    </div>
+
+    <div class="chart-wrap">
+      <iframe
+        src="/map/nj_worldcup_map.html"
+        width="100%"
+        height="680px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="NJ World Cup Air Quality and Traffic Map">
+      </iframe>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 3 — KEY FINDINGS SUMMARY
+     ══════════════════════════════════════════════════════ -->
+<section class="bg-alt" id="findings-summary">
+  <div class="container">
+    <div class="section-label">Summary of Findings</div>
+    <h2>Three Things the Data Shows</h2>
+
+    <div class="finding-cards">
+      <div class="finding-card">
+        <div class="finding-headline">Shore roads spike. Corridor roads don't.</div>
+        <p>Jersey Shore highway approach roads average +39% higher traffic in summer vs. winter, with one barrier island road reaching +119%. The MetLife Stadium transit corridor, covering Bergen, Hudson, and Passaic counties, shows essentially no seasonal volume change (+0.1%). The two zones face categorically different risk profiles.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-headline">Summer ozone is 82% higher before a single fan arrives.</div>
+        <p>Statewide summer ozone AQI averages <span class="mono">47.6</span> vs. <span class="mono">28.2</span> on NFL fall game days, representing a 69% gap driven entirely by heat, solar intensity, and photochemical reactions. Every World Cup match adds event-day vehicle pressure on top of this pre-existing seasonal burden.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-headline">NFL game days leave no detectable AQI fingerprint.</div>
+        <p>A well-managed transit event at MetLife does not produce a measurable county-level air quality spike. The risk from the World Cup is not any single game. It is 8 games across 5 weeks, with 4 on weekdays overlapping rush hour, and transit capped at 40,000 fans while the stadium holds 82,500.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 4 — THE TRAFFIC STORY
+     ══════════════════════════════════════════════════════ -->
+<section id="traffic">
+  <div class="container">
+    <div class="section-label">Finding 01</div>
+    <h2>The Traffic Story: Two Very Different Geographies</h2>
+
+    <div class="section-intro">
+      <p>Not all NJ roads follow the same seasonal pattern. Highway monitoring data from the Federal Highway Administration's Travel Monitoring Analysis System (TMAS), comprising 15 months of hourly vehicle counts across 181 permanent stations, reveals a sharp geographic divide between the MetLife transit corridor and the Jersey Shore.</p>
+    </div>
+
+    <p class="chart-caption">Summer vs. winter Average Daily Traffic at 17 curated TMAS monitoring stations. Corridor stations are essentially flat; Shore stations spike sharply.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart1_bottleneck.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Summer vs. winter traffic percent change by station">
+      </iframe>
+    </div>
+
+    <p class="bridge">The corridor feeding MetLife is flat because it operates at or near capacity year-round and has no seasonal slack to absorb. The Shore spikes because it is a leisure-destination road network, compressed between ocean and development, that doubles in function during summer. The World Cup introduces stadium-scale event pressure into the same months when the Shore corridor is already at its annual ceiling.</p>
+
+    <p class="chart-caption">Side-by-side comparison of summer vs. winter change in traffic (left) and ozone AQI (right) by zone. Transit Corridor ozone rises sharply despite flat traffic, confirming the chemistry-driven mechanism.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart1b_seasonal_baseline.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Seasonal traffic and ozone change by zone">
+      </iframe>
+    </div>
+
+    <p class="chart-caption">Traffic volume percent change (summer vs. winter) at individual TMAS stations. Dashed lines indicate zone-level PM2.5 AQI increases for reference.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart3c_traffic_pct_change.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Traffic percent change by station with PM2.5 reference lines">
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 5 — THE AIR QUALITY BASELINE
+     ══════════════════════════════════════════════════════ -->
+<section class="bg-alt" id="air-quality">
+  <div class="container">
+    <div class="section-label">Finding 02</div>
+    <h2>The Air Quality Baseline: Summer Is Already a Stressed System</h2>
+
+    <div class="section-intro">
+      <p>EPA Air Quality System data for 2023–2025, comprising PM2.5, ozone, and NO₂ readings from 28 monitoring stations across NJ, establishes a clear picture: summer air quality is measurably worse than winter in every county and every pollutant, and it deteriorates for reasons that have nothing to do with tourism. Adding World Cup traffic pressure compounds a system that is already operating in a degraded state.</p>
+    </div>
+
+    <p class="chart-caption">Monthly average PM2.5 AQI by zone across all 12 months (2023–2025 combined). The June 2023 Canadian wildfire event is annotated. Summer spike is consistent across years independent of the wildfire.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart3a_pm25_monthly_trend.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Monthly PM2.5 AQI trend by zone">
+      </iframe>
+    </div>
+
+    <p class="chart-caption">Summer (June–August) vs. winter (November–December) average PM2.5 AQI by zone. Jersey Shore shows the largest relative increase at +66%.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart3b_pm25_seasonal_bars.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="PM2.5 summer vs. winter AQI by zone">
+      </iframe>
+    </div>
+
+    <p class="bridge">A note on NO₂: summer nitrogen dioxide levels are slightly lower than winter at several corridor stations, the opposite of what a simple "more traffic = more pollution" argument would predict. This is chemically expected. Warmer temperatures accelerate the conversion of NO₂ into ground-level ozone, consuming NO₂ before it accumulates at the monitor. Summer NO₂ suppression is not evidence of cleaner air; it is evidence that the ozone-formation reaction is running faster.</p>
+
+    <p class="chart-caption">Jersey Shore average daily traffic (left axis) and ozone AQI (right axis) by month. Both datasets peak together in summer, confirming that in infrastructure-constrained coastal zones, traffic volume and air quality move in lockstep.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart2_shore_monthly.html"
+        height="520px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Jersey Shore monthly traffic and ozone dual-axis chart">
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 6 — THE NATURAL EXPERIMENTS
+     ══════════════════════════════════════════════════════ -->
+<section id="experiments">
+  <div class="container">
+    <div class="section-label">Finding 03</div>
+    <h2>Three Natural Experiments Already in the Data</h2>
+
+    <div class="section-intro">
+      <p>The World Cup has not happened yet, but the data does not require projection. Three historical conditions already embedded in the 2023–2025 dataset answer different parts of the air quality question directly: NFL game days at MetLife, Memorial Day weekend, and 4th of July weekend. Each one is a natural experiment with a known treatment and a measurable outcome.</p>
+    </div>
+
+    <p class="chart-caption">NFL game day average AQI vs. matched control Sundays (Bergen, Hudson, Passaic counties) across 34 game dates from the 2023 and 2024 seasons. Difference is within statistical noise for all three pollutants.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart4_nfl_null.html"
+        height="440px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="NFL game day AQI vs matched control Sundays">
+      </iframe>
+    </div>
+
+    <p class="bridge">This is the most important baseline in the analysis. A well-managed transit event at MetLife, drawing 70,000 fans through the same corridor and infrastructure, does not register as a detectable air quality signal at county-level monitoring stations. The transit system can absorb a single large event. This is the argument's foundation, not its conclusion: the World Cup is not a stadium event. It is a sustained regional stressor across eight weeks, four of which land on weekday evenings during rush hour, with transit capped well below demand.</p>
+
+    <p class="chart-caption">Shore road traffic on July 4th weekend vs. the average of all other July weekends, by day of week (2023–2025). July 4th volumes are at or below the typical July Saturday baseline because July in NJ is already at ceiling.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart5_july4_capacity.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="July 4th weekend Shore traffic vs July baseline">
+      </iframe>
+    </div>
+
+    <p class="bridge">The July 4th finding is not a null result; it is a capacity argument. Shore roads do not spike on the holiday weekend because they are already running at their seasonal peak every July weekend. The World Cup Final on July 19 lands into this same saturated baseline. There is no slack left in the system to absorb an event-day surge.</p>
+
+    <p class="chart-caption">Jersey Shore ozone AQI on Memorial Day weekend vs. non-holiday May weekend baseline, by year and day of week. 2024 Friday shows +130% above baseline. Three-year pattern: when traffic rises above baseline, ozone follows; when it doesn't (2025), ozone doesn't either.</p>
+    <div class="chart-wrap">
+      <iframe
+        src="/charts/chart6_memday_proof.html"
+        height="480px"
+        frameborder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Memorial Day ozone AQI vs May baseline">
+      </iframe>
+    </div>
+
+    <p class="bridge">In 2024, Memorial Day Friday on the Jersey Shore saw Shore traffic 26% above the May baseline and ozone AQI 130% above the May baseline on the same day. In 2025, when travel demand fell below baseline due to weather suppression, ozone fell below baseline too. Across three years the directional relationship is consistent: traffic pressure and ozone move together on the Shore. This is the same relationship that will play out across eight World Cup matchdays in June and July, in the same geography and the same season.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 7 — THE WORLD CUP RISK CASE
+     ══════════════════════════════════════════════════════ -->
+<section class="bg-alt" id="risk-case">
+  <div class="container">
+    <div class="section-label">The Argument</div>
+    <h2>Why the World Cup Is Different</h2>
+
+    <p class="risk-text">NJ Transit has committed to moving 40,000 fans per matchday by rail, 20,000 more than any previous MetLife event. The stadium holds 82,500. The gap of roughly 42,500 fans per match has no guaranteed transit access. FIFA's own COO publicly warned that elevated fares push fans toward cars, and MetLife has been designated a no-parking venue, meaning fans who drive disperse into surrounding municipalities such as Rutherford, Carlstadt, and North Bergen, rather than concentrating in a single lot. Four of the eight matches fall on weekdays; two of those overlap directly with the evening rush hour.</p>
+
+    <p class="risk-text">The communities absorbing this pressure are not the ones receiving the benefit. The transit corridor from Penn Station through Secaucus Junction to East Rutherford runs directly past the Hackensack River Superfund site and through municipalities including Kearny, Harrison, and Newark, which have some of the highest asthma rates and most industrially burdened air sheds in the state. Displaced commuters rerouted through Newark Penn Station on blackout-window matchdays add unplanned vehicle trips on top of event traffic in a city that already sits beneath major highway interchanges, flight paths from Newark Liberty Airport, and Port Newark freight operations.</p>
+
+    <p class="risk-text">The risk is not a single catastrophic day. It is eight weeks of compounding pressure on a system with no remaining margin: stadium traffic, Shore tourism, weekday commuter displacement, and peak summer ozone chemistry, all active simultaneously in a geography that carries a disproportionate existing pollution burden.</p>
+
+    <div class="callout">
+      <div class="callout-label">Central Thesis</div>
+      <p>"NJ's summer air quality baseline is already measurably elevated above winter. A single NFL game at MetLife produces no detectable additional AQI spike, suggesting the infrastructure can absorb a normal large event. The World Cup is not a normal large event. The risk is not a single catastrophic day. It is eight weeks of compounding pressure on a system with no remaining margin."</p>
+    </div>
+
+    <div class="callout ej">
+      <div class="callout-label">Environmental Justice Finding</div>
+      <p>Essex County, which includes Newark, one of the most pollution-burdened cities in New Jersey, has no PM2.5, NO₂, or ozone monitoring station in the federal EPA AQS dataset for the 2023–2025 period. The communities most likely to absorb the environmental cost of the World Cup are the ones for which we have the least data. That monitoring gap is itself a finding, and it points directly to where temporary sensor deployment is most needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 8 — POLICY RECOMMENDATIONS
+     ══════════════════════════════════════════════════════ -->
+<section id="recommendations">
+  <div class="container">
+    <div class="section-label">Recommendations</div>
+    <h2>What the Data Suggests</h2>
+
+    <div class="section-intro">
+      <p>These recommendations are ordered by impact and by alignment with NJDEP's existing regulatory authority.</p>
+    </div>
+
+    <div class="rec-list">
+      <div class="rec-item">
+        <div class="rec-header">
+          <span class="rec-num">01</span>
+          <h3>Transit Fare Parity on Matchdays</h3>
+        </div>
+        <p class="rec-body">Subsidizing NJ Transit matchday fares to be competitive with the cost of driving is the single most evidence-supported intervention. FIFA's own COO predicted car spillover directly from elevated fares. London's 2012 Olympics used a flat-fare transit policy on event days and demonstrably shifted trips from road to rail. The cost of the subsidy is substantially lower than the cumulative environmental cost of the alternative.</p>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-header">
+          <span class="rec-num">02</span>
+          <h3>Temporary Air Quality Sensor Deployment</h3>
+        </div>
+        <p class="rec-body">Essex County has no federal AQ monitor for 2023–2025. Deploying low-cost sensors, such as PurpleAir units, in Essex and Hudson County transit corridors for the duration of the tournament would close that gap in real time. Sensor placement at Secaucus Junction, Harrison Fan Hub, and Kearny would generate matchday-vs-baseline data that does not currently exist and would produce an evidence base for managing future large events at MetLife.</p>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-header">
+          <span class="rec-num">03</span>
+          <h3>Diesel Idle Enforcement at Shuttle Staging Areas</h3>
+        </div>
+        <p class="rec-body">New Jersey anti-idling regulations exist but are rarely enforced at large events. Diesel shuttle buses staging at Secaucus Junction and Harrison Fan Hub for hours before and after each match represent a concentrated, localized emission source adjacent to communities with existing respiratory health disparities. Designated enforcement zones on matchdays require no new infrastructure, only the application of existing regulatory authority.</p>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-header">
+          <span class="rec-num">04</span>
+          <h3>Prioritize Electric Shuttle Buses for Matchday Routes</h3>
+        </div>
+        <p class="rec-body">NJ Transit is actively converting its bus fleet to battery-electric. Allocating EV buses specifically to the eight World Cup matchday shuttle routes eliminates the diesel idle signature at the two highest-burden transit nodes identified in this analysis. This is a logistics decision, not a capital expenditure.</p>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-header">
+          <span class="rec-num">05</span>
+          <h3>Long-Term Investment in Statewide NJ Transit Expansion</h3>
+        </div>
+        <p class="rec-body">The World Cup exposes a structural problem that predates it: NJ Transit's coverage gaps force car dependency on residents who would otherwise choose transit. Sustained capital investment in rail and bus rapid transit expansion, closing coverage gaps in underserved Essex, Union, and Middlesex corridors, would reduce baseline vehicle volume across the state every day, not just on matchdays. Affordable, frequent, and geographically broader transit service is the only intervention that meaningfully lowers the daily driver count rather than managing its consequences. Every dollar invested in network expansion multiplies across years of reduced vehicle miles traveled, lower NOₓ and PM2.5 emissions, and reduced cumulative ozone precursor load, in the same communities this analysis identifies as already bearing a disproportionate air quality burden.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 9 — FOOTER
+     ══════════════════════════════════════════════════════ -->
+<footer id="footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <h4>About</h4>
+      <p>World Cup Transit Corridor Air Quality &amp; Environmental Justice Analysis</p>
+      <p>Built for the NJ Department of Environmental Protection Job Fair, 2026.</p>
+      <p>GIS + Data Analysis &nbsp;·&nbsp; Python &nbsp;·&nbsp; GeoPandas &nbsp;·&nbsp; Folium &nbsp;·&nbsp; Plotly</p>
+    </div>
+    <div class="footer-col">
+      <h4>Data Sources</h4>
+      <ul>
+        <li>EPA Air Quality System (AQS): PM2.5, Ozone, NO₂ daily readings, 2023–2025</li>
+        <li>FHWA Travel Monitoring Analysis System (TMAS): hourly traffic volumes, 2023–2025</li>
+        <li>NJ Transit: matchday transportation plan and fare structure</li>
+        <li>NJDEP Open Data Portal: contaminated sites, EJ layer</li>
+        <li>US Census Bureau: demographic data by census tract</li>
+        <li>FIFA / NY-NJ Host Committee: tourism volume projections</li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Links</h4>
+      <ul>
+        <li><a href="#">View on GitHub</a></li>
+        <li><a href="/map/nj_worldcup_map.html">View Full Map</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    Data from EPA AQS, FHWA TMAS, and NJ Transit. Analysis conducted for educational and portfolio purposes.
+  </div>
+</footer>
+
+</body>
+</html>
